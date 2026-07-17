@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Případ „Zlatý lev” - Detektivní hra</title>
+    <style>
+        :root {
+            --bg-color: #1a222d;
+            --card-bg: #252f3e;
+            --text-color: #e2e8f0;
+            --gold: #d4af37;
+            --gold-hover: #f3cd4d;
+            --correct: #2e7d32;
+            --incorrect: #c62828;
+            --border: #38475c;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            border-bottom: 2px solid var(--gold);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        h1 { color: var(--gold); margin-bottom: 5px; }
+        h2 { color: var(--gold); border-bottom: 1px solid var(--border); padding-bottom: 5px; }
+
+        .složka {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            display: none;
+        }
+
+        .složka.active { display: block; animation: fadeIn 0.5s ease; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .game-image {
+            width: 100%;
+            height: auto;
+            border: 1px solid var(--gold);
+            border-radius: 6px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            display: block;
+        }
+
+        .ukr-tip {
+            background-color: rgba(212, 175, 55, 0.1);
+            border-left: 4px solid var(--gold);
+            padding: 10px 15px;
+            margin: 15px 0;
+            font-size: 0.9em;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .task-box {
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+
+        .input-group { margin-bottom: 12px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        
+        select, input[type="text"] {
+            background: #151c24;
+            border: 1px solid var(--border);
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 4px;
+            width: 100%;
+            box-sizing: border-box;
+            font-size: 1em;
+        }
+        
+        select:focus, input[type="text"]:focus {
+            outline: none;
+            border-color: var(--gold);
+        }
+
+        button {
+            background-color: var(--gold);
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1em;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 10px;
+        }
+
+        button:hover { background-color: var(--gold-hover); }
+
+        .feedback {
+            margin-top: 10px;
+            font-weight: bold;
+            display: none;
+        }
+        .feedback.success { color: #81c784; display: block; }
+        .feedback.error { color: #e57373; display: block; }
+
+        .clue-box {
+            background: rgba(46, 125, 50, 0.15);
+            border: 1px solid var(--correct);
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+            display: none;
+        }
+        
+        .prog-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        .prog-table th, .prog-table td {
+            border: 1px solid var(--border);
+            padding: 8px;
+            text-align: left;
+        }
+        .prog-table th { background: #151c24; color: var(--gold); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>🔍 PŘÍPAD „ZLATÝ LEV”</h1>
+        <p>Detektivní jazyková hra • Vražda zlatníka pana Nováka (Úroveň B1)</p>
+    </header>
+
+    <div id="slozky-container">
+        <!-- SLOŽKA 0 -->
+        <div id="slozko0" class="složka active">
+            <h2>🗂️ SLOŽKA 0 — ZADÁNÍ PŘÍPADU</h2>
+            <img src="01.png" alt="Titulní spis" class="game-image">
+            <p>Vítejte, detektive.</p>
+            <p>V úterý ráno našla uklízečka v zadní dílně zlatnictví „Zlatý lev” v centru Plzně mrtvého majitele — pana Karla Nováka (58). Pan Novák tam zůstal v pondělí večer sám kvůli inventuře. Už nikdy nevyšel wen.</p>
+            <p>Ve výloze nic nechybí. Trezor je otevřený, ale beze stop násilí. A přesto je pan Novák mrtvý.</p>
+            <p><strong>Váš úkol:</strong> projít spis, vyslechnout svědky, prověřit alibi — a najít vraha.</p>
+            <p><em>Pozor: každou složku spisu si musíte nejdřív „odemknout” tím, že správně doplníte slovesné vazby. Detektiv, který neumí přesně formulovat, případ nevyřeší.</em></p>
+            <button onclick="nextSlozka(1)">Otevřít spis a vstoupit na místo činu</button>
+        </div>
+
+        <!-- SLOŽKA 1 -->
+        <div id="slozko1" class="složka">
+            <h2>🗂️ SLOŽKA 1 — MÍSTO ČINU</h2>
+            <img src="02.png" alt="Místo činu" class="game-image">
+            <p>Vstupujete do dílny za obchodem. Kriminalistický technik vám podává protokol o ohledání — jenže vlhkem se rozmazal a chybí v něm vazby. Doplňte je celými frázemi, ať víte, co se stalo.</p>
+            
+            <div class="task-box">
+                <h3>✏️ ÚLOHA 1 — Doplňte správný tvar</h3>
+                <div class="input-group">
+                    <label>1. Tělo pana Nováka leželo _______ :</label>
+                    <input type="text" id="u1_1" placeholder="[pracovní stůl]">
+                </div>
+                <div class="input-group">
+                    <label>2. Podle lékaře vrah udeřil oběť zezadu _______ :</label>
+                    <input type="text" id="u1_2" placeholder="[těžký předmět]">
+                </div>
+                <div class="input-group">
+                    <label>3. Tím předmětem byla bronzová soška lva. Technik si _______ krve na její podstavě.</label>
+                    <input type="text" id="u1_3" placeholder="[všimnout si]">
+                </div>
+                <div class="input-group">
+                    <label>4. Nikdo se _______ násilí u trezoru — byl otevřený klíčem.</label>
+                    <input type="text" id="u1_4" placeholder="[nedopustit se]">
+                </div>
+                <div class="input-group">
+                    <label>5. Z výlohy _______ jediný šperk.</label>
+                    <input type="text" id="u1_5" placeholder="[nezmizet]">
+                </div>
+                <button onclick="checkSlozka1()">Ověřit protokol</button>
+                <div id="fb1" class="feedback"></div>
+            </div>
+
+            <div id="clue1" class="clue-box">
+                <h4>🔓 Odemčený závěr detektiva:</h4>
+                <p>Nic se neukradlo, trezor byl otevřený klíčem (ne pákou), zbraní byla bronzová soška lva. Pachatel tedy <strong>nebyl cizí zloděj</strong>. Byl to někdo, komu pan Novák věřil a koho pustil dovnitř po zavíračce. (Zapamatujte si vražednou zbraň!)</p>
+                <button onclick="nextSlozka(2)">Přejít k profilům podezřelých</button>
+            </div>
+        </div>
+
+        <!-- SLOŽKA 2 -->
+        <div id="slozko2" class="složka">
+            <h2>🗂️ SLOŽKA 2 — PODEZŘELÍ</h2>
+            <img src="03.png" alt="Podezřelí" class="game-image">
+            <p>Máte čtyři podezřelé. Než je vyslechnete, musíte porozumět jejich motivům.</p>
+            
+            <div class="ukr-tip">
+                💡 <strong>Pro ukrajinsky mluvící:</strong> Pozor na rozdíly mezi českými a ukrajinskými vazbami a předložkami!
+            </div>
+
+            <div class="task-box">
+                <h3>✏️ ÚLOHA 2 — Doplňte správné tvary do profilů</h3>
+                <div class="input-group">
+                    <label>Marek: Po strýci by zdědil část obchodu. Má dluhy, ale nikdy se _______ .</label>
+                    <input type="text" id="u2_1" placeholder="[hádat se / strýc]">
+                </div>
+                <div class="input-group">
+                    <label>Jana: Stará se _______ firmy. V poslední době se pan Novák začal zajímat o čísla.</label>
+                    <input type="text" id="u2_2" placeholder="[účetnictví]">
+                </div>
+                <div class="input-group">
+                    <label>Petr: Dlouho toužil _______ . Před měsícem mu přebral zakázku.</label>
+                    <input type="text" id="u2_3" placeholder="[Novákovi zákazníci]">
+                </div>
+                <div class="input-group">
+                    <label>Eva: Často se hádala s manželem. Po jeho smrti by dostala _______ z pojistky.</label>
+                    <input type="text" id="u2_4" placeholder="[peníze]">
+                </div>
+                <button onclick="checkSlozka2()">Prověřit motivy</button>
+                <div id="fb2" class="feedback"></div>
+            </div>
+
+            <div id="clue2" class="clue-box">
+                <h4>🔓 Profily zajištěny.</h4>
+                <p>Nyní máme dostatek informací k zahájení výslechů. Všichni měli motiv, ale kdo lže?</p>
+                <button onclick="nextSlozka(3)">Vstoupit do výslechové místnosti</button>
+            </div>
+        </div>
+
+        <!-- SLOŽKA 3 -->
+        <div id="slozko3" class="složka">
+            <h2>🗂️ SLOŽKA 3 — VÝSLECHY</h2>
+            <img src="04.png" alt="Výslechová místnost" class="game-image">
+            <p>Každý svědek mluví, ale zvukový přepis má mezery. Doplňte správné předložky a tvary slov. <strong>Dávejte velký pozor: jeden z nich řekne něco, co by vědět neměl!</strong></p>
+
+            <div class="task-box">
+                <h3>✏️ ÚLOHA 3 — Doplňte výpovědi</h3>
+                <p><strong>Marek:</strong> „V pondělí večer jsem hrál <input type="text" id="u3_1" style="width:140px;" placeholder="[počítač]"> hry <input type="text" id="u3_2" style="width:140px;" placeholder="[kamarádi]"> online. Nemám s tou vraždou nic společného.“</p>
+                <p><strong>Petr:</strong> „Byl jsem <input type="text" id="u3_3" style="width:140px;" placeholder="[Praha]"> na obchodní večeři. Zúčastnil jsem se <input type="text" id="u3_4" style="width:140px;" placeholder="[jednání]"> o nové dodávce zlata.“</p>
+                <p><strong>Eva:</strong> „Byla jsem celou noc <input type="text" id="u3_5" style="width:140px;" placeholder="[sestra]"> v Rokycanech. Manžel se hodně bál o peníze.“</p>
+                <p><strong>Jana:</strong> „Starala jsem se o účetnictví 12 let. Ten večer jsem byla <input type="text" id="u3_6" style="width:140px;" placeholder="[kino]">. Když jsem se ráno dozvěděla, že ho někdo udeřil <strong>tou bronzovou soškou lva</strong>, byla jsem v šoku.“</p>
+                
+                <button onclick="checkSlozka3()">Analyzovat výpovědi</button>
+                <div id="fb3" class="feedback"></div>
+            </div>
+
+            <div id="clue3" class="clue-box">
+                <h4>🔍 SKRYTÁ STOPA ODHALENA!</h4>
+                <p style="color:#ffb74d;"><strong>Všimli jste si?</strong> Policie veřejnosti nikdy neoznámila, že vražednou zbraní byla bronzová soška lva! A přesto o ní jeden svědek promluvil sám od sebe... Zapište si to.</p>
+                <button onclick="nextSlozka(4)">Prozkoumat důkazy ze stolu oběti</button>
+            </div>
+        </div>
+
+        <!-- SLOŽKA 4 -->
+        <div id="slozko4" class="složka">
+            <h2>🗂️ SLOŽKA 4 — DŮKAZY</h2>
+            <img src="05.png" alt="Důkazy na stole" class="game-image">
+            <p>Na stole oběti se našel utržený vzkaz a nedokončená SMS odeslaná v 19:52. Rekonstruujte chybějící vazby.</p>
+
+            <div class="task-box">
+                <h3>✏️ ÚLOHA 4 — Rekonstrukce textů</h3>
+                <p><strong>Vzkaz z bloku:</strong> Zítra ráno zavolat <input type="text" id="u4_1" placeholder="[právník]">. Zeptat se <input type="text" id="u4_2" placeholder="[ty peníze]">. Už nevěřím <input type="text" id="u4_3" placeholder="[Jana]">. Musím jít <input type="text" id="u4_4" placeholder="[policie]">.</p>
+                
+                <p><strong>SMS z mobilu:</strong> „Zítra se s vámi musím sejít. Našel jsem <input type="text" id="u4_5" placeholder="[účetnictví]"> velký problém. Jde o velké peníze...“</p>
+                
+                <button onclick="checkSlozka4()">Potvrdit rekonstrukci</button>
+                <div id="fb4" class="feedback"></div>
+            </div>
+
+            <div id="clue4" class="clue-box">
+                <h4>🔓 Důkazy hovoří jasně:</h4>
+                <p>Pan Novák odhalil finanční podvod v účetnictví, přestal věřit Janě Dvořákové a chtěl jít na policii. Účetnictví spravuje výhradně Jana.</p>
+                <button onclick="nextSlozka(5)">Prověřit alibi podezřelých</button>
+            </div>
+        </div>
+
+        <!-- SLOŽKA 5 -->
+        <div id="slozko5" class="složka">
+            <h2>🗂️ SLOŽKA 5 — ALIBI</h2>
+            <img src="06.png" alt="Falešné alibi" class="game-image">
+            <p>Porovnejte alibi s fakty. Tři alibi potvrdily nezávislé zdroje. Jedno alibi je ale lež.</p>
+            
+            <table class="prog-table">
+                <tr><th>Podezřelý</th><th>Alibi</th><th>Ověření policie</th></tr>
+                <tr><td>Marek</td><td>Byl doma u PC</td><td>Potvrzeno (IP adresa + kamarádi) ✅</td></tr>
+                <tr><td>Petr</td><td>Večeře v Praze</td><td>Potvrzeno (Účtenky + svědci) ✅</td></tr>
+                <tr><td>Eva</td><td>Přespala u sestry</td><td>Potvrzeno (Sestra + sousedka) ✅</td></tr>
+                <tr><td>Jana</td><td>Kino (pondělí 20:00, film „Noční Plzeň“)</td><td><strong>Program kina Beseda: film hrají až od středy!</strong> ❌</td></tr>
+            </table>
+
+            <div class="task-box">
+                <h3>✏️ ÚLOHA 5 — Odhalte lež celou větou</h3>
+                <label>Otázka: Může Janino alibi platit? Napište odpověď celou větou (např. „Janino alibi neplatí, protože...“):</label>
+                <input type="text" id="u5_1" placeholder="Napište své zdůvodnění...">
+                <button onclick="checkSlozka5()">Odeslat analýzu alibi</button>
+                <div id="fb5" class="feedback"></div>
+            </div>
+
+            <div id="clue5" class="clue-box">
+                <h4>🔓 Alibi vyvráceno!</h4>
+                <p>Jana o svém alibi prokazatelně lhala. V pondělí v kině být nemohla.</p>
+                <button onclick="nextSlozka(6)">Přejít k finálnímu obvinění</button>
+            </div>
+        </div>
+
+        <!-- SLOŽKA 6 -->
+        <div id="slozko6" class="složka">
+            <h2>🗂️ SLOŽKA 6 — FINÁLNÍ OBVINĚNÍ</h2>
+            <p>Detektivové, máte vše, co potřebujete. Napište celé jméno vraha, kterého zatknete.</p>
+            
+            <div class="task-box">
+                <h3>⚖️ ZATÝKACÍ ROZKAZ</h3>
+                <label>Zadejte jméno a příjmení pachatele (Koho obviňujete?):</label>
+                <input type="text" id="vrah_jmeno" placeholder="[Jana Dvořáková]">
+                <button onclick="arrestVrah()">ZATKNOUT PACHATELE</button>
+                <div id="fb6" class="feedback"></div>
+            </div>
+
+            <div id="rozuzleni" class="clue-box" style="background: rgba(212,175,55,0.1); border-color: var(--gold);">
+                <h3 style="color:var(--gold);">🎉 PŘÍPAD UZAVŘEN - ROZUZLENÍ</h3>
+                <img src="04.png" alt="Rozuzlení případu" class="game-image">
+                <p>Vrahem je skutečně <strong>Jana Dvořáková</strong>, účetní zlatnictví.</p>
+                <p>Dvanáct let se starala o účetnictví a poslední rok z něj tiše kradla. Když si pan Novák večer všiml chybějících peněz, přestal jí věřit a rozhodl se jednat. Jana za ním večer šla, hádka vyvrcholila úderem bronzové sošky lva.</p>
+                <p>Udělala dvě osudové chyby: Vymyslela si alibi na film, který se v pondělí vůbec nehrál, a při výslechu sama od sebe mluvila o sošce lva jako o vražedné zbrani, přestože to policie utajila.</p>
+                <p><strong>Skvělá práce, detektive! Případ Zlatý lev je úspěšně vyřešen díky vaší znalosti českých slovesných vazeb!</strong></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function norm(txt) {
+        return txt.toLowerCase().trim().replace(/\s+/g, ' ');
+    }
+
+    function nextSlozka(num) {
+        document.querySelectorAll('.složka').forEach(s => s.classList.remove('active'));
+        document.getElementById('slozko' + num).classList.add('active');
+        window.scrollTo(0, 0);
+    }
+
+    function checkSlozka1() {
+        let ans1 = norm(document.getElementById('u1_1').value);
+        let ans2 = norm(document.getElementById('u1_2').value);
+        let ans3 = norm(document.getElementById('u1_3').value);
+        let ans4 = norm(document.getElementById('u1_4').value);
+        let ans5 = norm(document.getElementById('u1_5').value);
+        let fb = document.getElementById('fb1');
+
+        if ((ans1.includes('u pracovního stolu') || ans1.includes('vedle pracovního stolu')) &&
+            ans2.includes('těžkým předmětem') &&
+            ans3.includes('všiml si krve') &&
+            ans4.includes('nedopustil se násilí') &&
+            (ans5.includes('nezmizel jediný šperk') || ans5.includes('nezmizel ani jediný šperk'))) {
+            
+            fb.className = "feedback success";
+            fb.innerText = "🔑 Správně! Protokol je kompletní a čitelný.";
+            document.getElementById('clue1').style.display = 'block';
+        } else {
+            fb.className = "feedback error";
+            fb.innerText = "❌ V protokolu jsou stále chyby. Zkontrolujte správné předložky a koncovky.";
+        }
+    }
+
+    function checkSlozka2() {
+        let ans1 = norm(document.getElementById('u2_1').value);
+        let ans2 = norm(document.getElementById('u2_2').value);
+        let ans3 = norm(document.getElementById('u2_3').value);
+        let ans4 = norm(document.getElementById('u2_4').value);
+        let fb = document.getElementById('fb2');
+
+        if (ans1.includes('se strýcem') &&
+            ans2.includes('o účetnictví') &&
+            ans3.includes('po novákových zákaznících') &&
+            ans4.includes('peníze')) {
+            
+            fb.className = "feedback success";
+            fb.innerText = "🔑 Správně! Vazby motivů jsou jasné.";
+            document.getElementById('clue2').style.display = 'block';
+        } else {
+            fb.className = "feedback error";
+            fb.innerText = "❌ Nesprávná vazba. Použijte správnou předložku a pád slov z okénka.";
+        }
+    }
+
+    function checkSlozka3() {
+        let ans1 = norm(document.getElementById('u3_1').value);
+        let ans2 = norm(document.getElementById('u3_2').value);
+        let ans3 = norm(document.getElementById('u3_3').value);
+        let ans4 = norm(document.getElementById('u3_4').value);
+        let ans5 = norm(document.getElementById('u3_5').value);
+        let ans6 = norm(document.getElementById('u3_6').value);
+        let fb = document.getElementById('fb3');
+
+        if (ans1.includes('na počítači') &&
+            ans2.includes('s kamarády') &&
+            ans3.includes('v praze') &&
+            ans4.includes('jednání') &&
+            ans5.includes('u sestry') &&
+            ans6.includes('v kině')) {
+            
+            fb.className = "feedback success";
+            fb.innerText = "🔑 Správně! Zvukové přepisy výpovědí jsou kompletní.";
+            document.getElementById('clue3').style.display = 'block';
+        } else {
+            fb.className = "feedback error";
+            fb.innerText = "❌ Někde chybí správná předložka nebo tvar slova. Opravte texty.";
+        }
+    }
+
+    function checkSlozka4() {
+        let ans1 = norm(document.getElementById('u4_1').value);
+        let ans2 = norm(document.getElementById('u4_2').value);
+        let ans3 = norm(document.getElementById('u4_3').value);
+        let ans4 = norm(document.getElementById('u4_4').value);
+        let ans5 = norm(document.getElementById('u4_5').value);
+        let fb = document.getElementById('fb4');
+
+        if (ans1.includes('právníkovi') &&
+            ans2.includes('na ty peníze') &&
+            ans3.includes('janě') &&
+            ans4.includes('na policii') &&
+            ans5.includes('v účetnictví')) {
+            
+            fb.className = "feedback success";
+            fb.innerText = "🔑 Správně! Vzkazy byly úspěšně dešifrovány.";
+            document.getElementById('clue4').style.display = 'block';
+        } else {
+            fb.className = "feedback error";
+            fb.innerText = "❌ Důkazy nedávají smysl. Pozor na vazby některých sloves.";
+        }
+    }
+
+    function checkSlozka5() {
+        let ans1 = norm(document.getElementById('u5_1').value);
+        let fb = document.getElementById('fb5');
+
+        if (ans1.length > 10 && (ans1.includes('neplatí') || ans1.includes('nemůže') || ans1.includes('lže'))) {
+            fb.className = "feedback success";
+            fb.innerText = "🔑 Výborně, logický rozbor zafungoval.";
+            document.getElementById('clue5').style.display = 'block';
+        } else {
+            fb.className = "feedback error";
+            fb.innerText = "❌ Zkuste odpovědět celou a podrobnější větou. Proč alibi neplatí?";
+        }
+    }
+
+    function arrestVrah() {
+        let jmeno = norm(document.getElementById('vrah_jmeno').value);
+        let fb = document.getElementById('fb6');
+
+        if (jmeno.includes('janu') && jmeno.includes('dvořákovou')) {
+            fb.className = "feedback success";
+            fb.innerText = "🚨 ZATČENÍ PROBĚHLO ÚSPĚŠNĚ!";
+            document.getElementById('rozuzleni').style.display = 'block';
+        } else if (jmeno.includes('jana') && jmeno.includes('dvořáková')) {
+            fb.className = "feedback error";
+            fb.innerText = "❌ Správná osoba, ale doplňte správný pád na otázku KOHO obviňujete.";
+        } else {
+            fb.className = "feedback error";
+            fb.innerText = "❌ Vedle, detektive! Tento člověk má neprůstřelné alibi.";
+        }
+    }
+</script>
+
+</body>
+</html>
