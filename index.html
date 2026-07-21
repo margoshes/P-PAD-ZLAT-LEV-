@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Případ „Zlatý lev" — detektivní hra</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#12131a;
+    --bg-2:#171922;
+    --folder:#1e212c;
+    --folder-edge:#2a2e3d;
+    --paper:#e9e5d8;
+    --muted:#9b9788;
+    --line:#2c3040;
+    --gold:#e0a82e;
+    --gold-dim:#b98a1f;
+    --red:#c8483a;
+    --ok:#63b98a;
+    --bad:#d76a5e;
+
+    /* pády */
+    --gen:#c77dab; --dat:#6fc2a0; --akuz:#e8955a; --lok:#d9b24a; --instr:#8494e6;
+
+    --display:'Unbounded',sans-serif;
+    --body:'Onest',system-ui,sans-serif;
+    --mono:'JetBrains Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:
+      radial-gradient(120% 80% at 50% -10%, #1b1d28 0%, var(--bg) 55%) fixed,
+      var(--bg);
+    color:var(--paper);
+    font-family:var(--body);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    font-size:17px;
+    padding-bottom:80px;
+  }
+  .wrap{max-width:720px;margin:0 auto;padding:0 18px}
+
+  /* HERO */
+  .hero{padding:54px 0 26px;text-align:center;position:relative}
+  .stamp{
+    display:inline-block;
+    font-family:var(--mono);font-weight:700;font-size:12px;letter-spacing:.22em;
+    color:var(--red);border:2px solid var(--red);border-radius:5px;
+    padding:5px 12px;transform:rotate(-6deg);opacity:.85;margin-bottom:22px;
+  }
+  h1{
+    font-family:var(--display);font-weight:800;
+    font-size:clamp(34px,8vw,60px);line-height:.95;letter-spacing:-.02em;
+    color:var(--paper);
+  }
+  h1 em{color:var(--gold);font-style:normal}
+  .hero-sub{
+    font-family:var(--mono);font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--muted);margin-top:16px;
+  }
+  .progress{
+    display:flex;gap:6px;justify-content:center;margin-top:26px;flex-wrap:wrap;
+  }
+  .pdot{
+    font-family:var(--mono);font-size:11px;font-weight:700;
+    width:30px;height:30px;display:grid;place-items:center;border-radius:7px;
+    border:1px solid var(--folder-edge);color:var(--muted);background:var(--folder);
+    transition:.25s;
+  }
+  .pdot.done{background:var(--gold);color:#1a1400;border-color:var(--gold)}
+  .pdot.active{border-color:var(--gold);color:var(--gold)}
+
+  /* FOLDER CARD */
+  .folder{
+    background:var(--folder);
+    border:1px solid var(--folder-edge);
+    border-top:3px solid var(--gold-dim);
+    border-radius:4px 14px 14px 14px;
+    margin:20px 0;
+    box-shadow:0 20px 50px rgba(0,0,0,.35);
+    position:relative;overflow:hidden;
+    animation:slidein .45s cubic-bezier(.2,.7,.3,1);
+  }
+  @keyframes slidein{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+  .tab{
+    position:absolute;top:0;left:0;
+    background:var(--gold-dim);color:#1a1400;
+    font-family:var(--mono);font-weight:700;font-size:11px;letter-spacing:.14em;
+    padding:5px 14px 5px 18px;border-radius:0 0 12px 0;
+  }
+  .folder-body{padding:52px 26px 26px}
+  .folder h2{
+    font-family:var(--display);font-weight:700;font-size:clamp(20px,4vw,27px);
+    letter-spacing:-.01em;line-height:1.1;margin-bottom:4px;
+  }
+  .folder .story{color:#d8d3c4;margin-top:14px}
+  .folder .story p{margin-bottom:11px}
+  .folder .story b{color:var(--gold)}
+  .imgnote{
+    font-family:var(--mono);font-size:11.5px;color:var(--muted);
+    border-left:2px solid var(--folder-edge);padding:6px 0 6px 12px;margin:14px 0;
+    line-height:1.45;
+  }
+
+  .instruction{
+    font-size:14.5px;color:var(--muted);
+    background:var(--bg-2);border:1px solid var(--line);border-radius:9px;
+    padding:11px 14px;margin:18px 0 16px;
+  }
+  .instruction b{color:var(--paper)}
+
+  /* MATCHES */
+  .match-row{display:flex;align-items:center;gap:12px;margin:9px 0;flex-wrap:wrap}
+  .match-verb{
+    font-family:var(--display);font-weight:500;font-size:16px;min-width:150px;
+  }
+  .match-arrow{color:var(--folder-edge)}
+  select{
+    font-family:var(--mono);font-size:14px;font-weight:500;
+    background:var(--bg-2);color:var(--paper);
+    border:1.5px solid var(--line);border-radius:8px;padding:8px 10px;flex:1;min-width:150px;
+    cursor:pointer;
+  }
+  select:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+  /* FILL LINES */
+  .line{margin:15px 0;font-size:17px;line-height:2}
+  .line .lead{
+    font-family:var(--mono);font-size:12px;color:var(--gold-dim);font-weight:700;
+    margin-right:6px;
+  }
+  input.gap{
+    font-family:var(--mono);font-size:15px;
+    background:var(--bg-2);color:var(--paper);
+    border:none;border-bottom:2px solid var(--gold-dim);
+    padding:4px 8px;margin:0 3px;min-width:130px;width:170px;
+    border-radius:5px 5px 0 0;transition:.15s;
+  }
+  input.gap:focus{outline:none;border-bottom-color:var(--gold);background:#20222d}
+  input.gap.ok{border-bottom-color:var(--ok);color:var(--ok)}
+  input.gap.bad{border-bottom-color:var(--bad);color:var(--bad)}
+  .chip{
+    display:inline-flex;align-items:center;gap:6px;
+    font-family:var(--mono);font-size:13px;font-weight:700;
+    background:rgba(255,255,255,.05);border:1px solid var(--folder-edge);
+    border-radius:7px;padding:2px 9px;white-space:nowrap;color:var(--paper);
+  }
+  .chip .lbl{font-size:9px;color:var(--muted);font-weight:700;letter-spacing:.06em}
+  .chip.gen{border-color:var(--gen)} .chip.dat{border-color:var(--dat)}
+  .chip.akuz{border-color:var(--akuz)} .chip.lok{border-color:var(--lok)}
+  .chip.instr{border-color:var(--instr)} .chip.nom{border-color:var(--muted)}
+
+  /* BUTTONS + RESULT */
+  .btn{
+    font-family:var(--body);font-weight:700;font-size:15px;
+    background:var(--gold);color:#1a1400;border:none;border-radius:9px;
+    padding:12px 22px;cursor:pointer;transition:.15s;margin-top:8px;
+  }
+  .btn:hover{background:#eeb949}
+  .btn:active{transform:translateY(1px)}
+  .btn:focus-visible{outline:2px solid var(--paper);outline-offset:2px}
+  .btn.ghost{background:transparent;color:var(--gold);border:1.5px solid var(--gold-dim)}
+  .btn.ghost:hover{background:rgba(224,168,46,.1)}
+
+  .result{margin-top:14px;font-size:14.5px;display:none;padding:12px 14px;border-radius:9px}
+  .result.show{display:block;animation:fade .25s}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .result.err{background:rgba(215,106,94,.1);border:1px solid var(--bad);color:#e8b3ac}
+  .result.win{background:rgba(99,185,138,.1);border:1px solid var(--ok);color:#b3e0c6}
+  .result .key{font-family:var(--mono);font-size:13px;color:var(--muted);margin-top:8px;display:block}
+
+  /* SOLVED STAMP + UNLOCK */
+  .solved-stamp{
+    position:absolute;top:16px;right:14px;
+    font-family:var(--mono);font-weight:700;font-size:13px;letter-spacing:.14em;
+    color:var(--ok);border:2.5px solid var(--ok);border-radius:6px;padding:4px 10px;
+    transform:rotate(8deg);opacity:0;pointer-events:none;
+  }
+  .solved-stamp.show{animation:thud .4s cubic-bezier(.3,1.4,.5,1) forwards}
+  @keyframes thud{0%{opacity:0;transform:rotate(8deg) scale(2.4)}70%{opacity:1;transform:rotate(8deg) scale(.92)}100%{opacity:.9;transform:rotate(8deg) scale(1)}}
+  .unlock{
+    margin-top:18px;padding:15px 16px;border-radius:10px;
+    background:var(--bg-2);border:1px dashed var(--gold-dim);display:none;
+  }
+  .unlock.show{display:block;animation:fade .3s}
+  .unlock .u-lbl{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;color:var(--gold);text-transform:uppercase;display:block;margin-bottom:6px}
+  .unlock p{color:#d8d3c4;font-size:15px}
+  .unlock b{color:var(--gold)}
+
+  /* FOLLOWUP CHOICE */
+  .followup{margin-top:20px;padding-top:18px;border-top:1px solid var(--line);display:none}
+  .followup.show{display:block;animation:fade .3s}
+  .followup .q{font-weight:600;font-size:16px;margin-bottom:12px}
+  .choices{display:grid;gap:9px}
+  .choice{
+    text-align:left;font-family:var(--body);font-size:15px;font-weight:500;
+    background:var(--bg-2);border:1.5px solid var(--line);color:var(--paper);
+    border-radius:9px;padding:12px 15px;cursor:pointer;transition:.12s;
+  }
+  .choice:hover:not(:disabled){border-color:var(--gold-dim)}
+  .choice:disabled{cursor:default}
+  .choice.right{border-color:var(--ok);background:rgba(99,185,138,.12);color:#b3e0c6}
+  .choice.wrong{border-color:var(--bad);background:rgba(215,106,94,.1);color:#e8b3ac}
+  .choice:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+  /* FINAL */
+  .final{
+    background:linear-gradient(180deg,#1f2230,#191b24);
+    border:1px solid var(--gold-dim);border-radius:14px;padding:34px 26px;margin:22px 0;
+    display:none;
+  }
+  .final.show{display:block;animation:slidein .5s}
+  .final .case-closed{
+    font-family:var(--mono);font-weight:700;font-size:13px;letter-spacing:.2em;
+    color:var(--red);border:2px solid var(--red);border-radius:6px;padding:5px 12px;
+    display:inline-block;transform:rotate(-4deg);margin-bottom:20px;
+  }
+  .final h2{font-family:var(--display);font-weight:800;font-size:26px;color:var(--gold);margin-bottom:14px}
+  .final p{color:#dcd7c8;margin-bottom:11px}
+  .final b{color:var(--paper)}
+
+  footer{text-align:center;color:var(--muted);font-size:12.5px;font-family:var(--mono);margin-top:30px;letter-spacing:.05em}
+
+  @media(max-width:600px){
+    body{font-size:16px}
+    .folder-body{padding:48px 18px 22px}
+    .line{line-height:2.1}
+    input.gap{width:150px;min-width:120px}
+    .match-verb{min-width:120px}
+  }
+  @media(prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important;scroll-behavior:auto}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="stamp">Důvěrné · Policie ČR</span>
+    <h1>Případ <em>„Zlatý lev"</em></h1>
+    <div class="hero-sub">Vražda zlatníka · slovesné vazby, předložky a pády</div>
+    <div class="progress" id="progress"></div>
+  </div>
+</header>
+
+<main class="wrap" id="game"></main>
+
+<footer>Detektivní jazyková hra · čeština pro ukrajinsky mluvící studenty (B1)</footer>
+
+<script>
+/* ---------- DATA ----------
+   PRAVIDLO: sloveso (i se „si/se") zůstává CELÉ ve větě.
+   Do okénka se doplňuje JEN řízené slovo = předložka + správný pád.
+   „hint" je slovo v 1. pádě, „a" je pole přijímaných odpovědí.        */
+
+const VAZBY = ["z + 2. pád","o + 4. pád","s + 7. pád","po + 6. pád","na + 4. pád"];
+
+const stations = [
+  { kind:'intro', num:'00', tab:'ZADÁNÍ PŘÍPADU',
+    title:'Zadání případu',
+    story:[
+      "Vítejte, detektive.",
+      "V úterý ráno našla uklízečka v zadní dílně zlatnictví <b>„Zlatý lev“</b> v centru Plzně mrtvého majitele — <b>pana Karla Nováka</b> (58). Ve výloze nic nechybí, trezor je otevřený, ale beze stop násilí. A přesto je pan Novák mrtvý.",
+      "Váš úkol: projít spis a najít vraha. Každou složku si <b>odemknete</b> tím, že správně doplníte slovesné vazby."
+    ],
+    img:'Obrázek 0 — titulní spis: zavřená složka na stole detektiva, razítko „DŮVĚRNÉ", bronzová soška lva, světlo lampy.',
+    note:'V okénku 【 】 je slovo v 1. pádě. Vy doplníte jen správnou předložku a pád — sloveso ve větě už je celé.'
+  },
+
+  { num:'01', tab:'MÍSTO ČINU',
+    title:'Místo činu',
+    story:[
+      "Vstupujete do dílny. Technik vám podává protokol o ohledání — jenže vlhkem se rozmazaly vazby. Doplňte je."
+    ],
+    instruction:'Sloveso je ve větě celé. Do okénka napište slovo z 【 】 ve správném pádě (a s předložkou, pokud ji vazba vyžaduje).',
+    lines:[
+      [{lead:'1.'},"Tělo pana Nováka leželo ",{hint:'pracovní stůl',c:'gen',a:['u pracovního stolu']},"."],
+      [{lead:'2.'},"Vrah udeřil oběť zezadu ",{hint:'těžký předmět',c:'instr',a:['těžkým předmětem']},"."],
+      [{lead:'3.'},"Technik si všiml ",{hint:'krev',c:'gen',a:['krve']}," na podstavě sošky."],
+      [{lead:'4.'},"U trezoru se nikdo nedopustil žádné ",{hint:'loupež',c:'gen',a:['loupeže']},"."],
+      [{lead:'5.'},"Z výlohy nezmizel ",{hint:'jediný šperk',c:'nom',a:['jediný šperk','ani jediný šperk']},"."]
+    ],
+    img:'Obrázek 1 — dílna po zavíračce: převržená židle, nářadí, křídový obrys u stolu, bronzová soška lva s číslem důkazu „1".',
+    unlock:'Nic se neukradlo, trezor byl otevřený <b>klíčem</b>, zbraní byla <b>bronzová soška lva</b>. Pachatel nebyl cizí zloděj — byl to někdo, komu pan Novák věřil. <b>Vražednou zbraň si zapamatujte.</b>'
+  },
+
+  { num:'02', tab:'PODEZŘELÍ',
+    title:'Podezřelí',
+    story:["Čtyři podezřelí. Nejdřív si u každého slovesa vyberte správnou vazbu, pak doplňte motivy do profilů."],
+    matches:[
+      {verb:'podezírat koho', a:'z + 2. pád'},
+      {verb:'bát se (o koho)', a:'o + 4. pád'},
+      {verb:'hádat se', a:'s + 7. pád'},
+      {verb:'toužit', a:'po + 6. pád'},
+      {verb:'ptát se', a:'na + 4. pád'}
+    ],
+    instruction:'Do okének doplňte slovo z 【 】 ve správném pádě a s předložkou podle vazby.',
+    lines:[
+      [{lead:'①'},"Marek (synovec): po strýci by zdědil ",{hint:'polovina zlatnictví',c:'akuz',a:['polovinu zlatnictví']},", ale nikdy se veřejně nehádal ",{hint:'strýc',c:'instr',a:['se strýcem']},"."],
+      [{lead:'②'},"Jana (účetní): stará se ",{hint:'účetnictví',c:'akuz',a:['o účetnictví']}," firmy. Novák se začal víc zajímat ",{hint:'čísla',c:'akuz',a:['o čísla']},"."],
+      [{lead:'③'},"Petr (konkurent): dlouho toužil ",{hint:'Novákovi zákazníci',c:'lok',a:['po novákových zákaznících']},"."],
+      [{lead:'④'},"Eva (manželka): často se hádala ",{hint:'manžel',c:'instr',a:['s manželem']}," a z pojistky by dostala ",{hint:'velké peníze',c:'akuz',a:['velké peníze']},"."]
+    ],
+    img:'Obrázek 2 — čtyři „policejní" portréty podezřelých (formát na výšku): Marek, Jana, Petr, Eva.',
+    unlock:'Každý má motiv. Ale kdo z nich byl večer na místě? To ukážou výslechy.'
+  },
+
+  { num:'03', tab:'VÝSLECHY',
+    title:'Výslechy',
+    story:["Čtyři výpovědi. Doplňte vazby — a <b>dávejte pozor</b>. Jeden svědek řekne něco, co vědět neměl."],
+    instruction:'Sloveso i se „si/se" už je ve větě celé. Doplňte jen slovo z 【 】 ve správném tvaru.',
+    lines:[
+      [{lead:'① Marek'},"„Hrál jsem hry ",{hint:'počítač',c:'lok',a:['na počítači']}," ",{hint:'kamarádi',c:'instr',a:['s kamarády']}," online. Nemám ",{hint:'ta vražda',c:'instr',a:['s tou vraždou','s vraždou']}," nic společného."],
+      [{lead:'② Petr'},"„V pondělí jsem byl ",{hint:'Praha',c:'lok',a:['v praze']}," na večeři. Zúčastnil jsem se ",{hint:'schůzka',c:'gen',a:['schůzky']}," o dodávce zlata."],
+      [{lead:'③ Eva'},"„Byla jsem celou noc ",{hint:'sestra',c:'gen',a:['u sestry']},". Manžel se bál ",{hint:'peníze',c:'akuz',a:['o peníze']}," a pořád mluvil ",{hint:'problém',c:'lok',a:['o problému']}," ve firmě."],
+      [{lead:'④ Jana'},"„Starala jsem se ",{hint:'jeho účetnictví',c:'akuz',a:['o jeho účetnictví','o účetnictví']}," dvanáct let. Ten večer jsem byla ",{hint:'kino',c:'lok',a:['v kině']},". Když jsem slyšela, že ho někdo udeřil <b>tou bronzovou soškou lva</b>, byla jsem v šoku."]
+    ],
+    img:'Obrázek 3 — výslechová místnost: lampa nad kovovým stolem, dvě židle, jednosměrné zrcadlo.',
+    followup:{
+      q:'Kdo prozradil, že zná vražednou zbraň (bronzovou sošku lva), i když ji policie nezveřejnila?',
+      options:['Marek','Petr','Eva','Jana'], correct:3,
+      ok:'Přesně. Jana mluví o zbrani, kterou znal jen vrah. Ale potřebujeme důkazy — čtěte dál.',
+      no:'Vraťte se ke Složce 1: čím byl Novák zabit? A kdo o tom mluví sám od sebe?'
+    },
+    unlock:'Jana ví o vražedné zbrani, o které policie mlčela. Podezření se stáčí k ní.'
+  },
+
+  { num:'04', tab:'DŮKAZY',
+    title:'Důkazy',
+    story:["Na stole byly dva důkazy: <b>utržený vzkaz</b> a poslední <b>SMS</b> (19:52). Zrekonstruujte je."],
+    instruction:'Doplňte slovo z 【 】 ve správném pádě a předložce.',
+    lines:[
+      [{lead:'Vzkaz'},"Zavolat ",{hint:'právník',c:'dat',a:['právníkovi']},". Zeptat se ",{hint:'ty peníze',c:'akuz',a:['na ty peníze','na peníze']},". Nevěřím ",{hint:'Jana',c:'dat',a:['janě']},". Jít ",{hint:'policie',c:'akuz',a:['na policii']},"."],
+      [{lead:'SMS'},"Musím se sejít ",{hint:'vy',c:'instr',a:['s vámi']},". Našel jsem ",{hint:'účetnictví',c:'lok',a:['v účetnictví']}," velký problém. Jde ",{hint:'velké peníze',c:'akuz',a:['o velké peníze']},"…"]
+    ],
+    img:'Obrázek 4 — deska stolu shora: utržený lístek (nečitelný rukopis), mobil, účetní kniha, sáček na důkazy.',
+    unlock:'Novák večer objevil <b>v účetnictví problém s penězi</b>, přestal <b>věřit Janě</b> a chystal se volat <b>právníkovi a na policii</b>. Účetnictví má na starost jen jeden člověk — <b>Jana</b>.'
+  },
+
+  { num:'05', tab:'ALIBI',
+    title:'Alibi',
+    story:["Prověřte alibi. Tři sedí. Jedno je lež."],
+    instruction:'Doplňte slovo z 【 】 ve správném pádě a předložce.',
+    lines:[
+      [{lead:'Marek'},"Byl doma, hrál ",{hint:'počítač',c:'lok',a:['na počítači']}," s kamarády. ✔ potvrzeno"],
+      [{lead:'Petr'},"Byl na večeři ",{hint:'Praha',c:'lok',a:['v praze']},". ✔ potvrzeno"],
+      [{lead:'Eva'},"Přespala ",{hint:'sestra',c:'gen',a:['u sestry']}," v Rokycanech. ✔ potvrzeno"],
+      [{lead:'Jana'},"Tvrdí, že byla ",{hint:'kino',c:'lok',a:['v kině']}," na filmu „Noční Plzeň“ (pondělí 20:00). ❓"]
+    ],
+    img:'Obrázek 5 — pomačkaný lístek do kina vedle programu, kde je film až od středy; ruka data zakroužkovává.',
+    followup:{
+      q:'Program kina: film „Noční Plzeň" hráli AŽ OD STŘEDY — v pondělí nikde. Čí alibi je tedy falešné?',
+      options:['Marek','Petr','Eva','Jana'], correct:3,
+      ok:'Správně. Jana lhala o alibi — v kině ten večer být nemohla.',
+      no:'Které alibi nikdo nepotvrdil a navíc nesedí s programem kina?'
+    },
+    unlock:'Janino alibi <b>neplatí</b>. Motiv, přístup k penězům, znalost zbraně i falešné alibi — všechno ukazuje na ni.'
+  },
+
+  { num:'06', tab:'OBVINĚNÍ', last:true,
+    title:'Obvinění',
+    story:["Máte vše, detektive. Čas označit vraha."],
+    img:'Obrázek 6 — rozuzlení: Jana ve výslechové místnosti se skloněnou hlavou, na stole sáček s bronzovou soškou lva.',
+    followup:{
+      q:'Koho obviníte z vraždy pana Nováka?',
+      options:['Marek Novák','Jana Dvořáková','Petr Horák','Eva Nováková'], correct:1,
+      ok:'', no:'Projděte znovu důkazy: motiv, falešné alibi a znalost vražedné zbraně.'
+    },
+    final:{
+      title:'Případ uzavřen',
+      text:[
+        "Vrahem je <b>Jana Dvořáková</b>, účetní zlatnictví.",
+        "Dvanáct let se starala <b>o účetnictví</b> — a poslední rok z něj kradla. Když si Novák večer všiml <b>chybějících peněz</b>, přestal jí věřit a chtěl volat <b>na policii</b>. Hádka po zavíračce skončila úderem <b>bronzovou soškou lva</b>.",
+        "Alibi si vymyslela — film ten večer nehráli. A pak udělala chybu: <b>mluvila o vražedné zbrani</b>, kterou nikdo z veřejnosti neznal.",
+        "Ostatní byli nevinní: Marek hrál doma <b>s kamarády</b>, Petr byl <b>v Praze</b>, Eva <b>u sestry</b>. Vy jste to poskládal z vazeb, předložek a pádů. <b>Výborná práce, detektive.</b>"
+      ]
+    }
+  }
+];
+
+/* ---------- ENGINE ---------- */
+const game = document.getElementById('game');
+const prog = document.getElementById('progress');
+let unlocked = 0;
+
+// progress dots
+stations.forEach((s,i)=>{
+  const d=document.createElement('span');
+  d.className='pdot';d.id='pd'+i;d.textContent=s.num;
+  prog.appendChild(d);
+});
+
+function norm(s){
+  return s.toLowerCase().trim()
+    .replace(/[.,:;!?"„“”]/g,'')
+    .replace(/\s+/g,' ');
+}
+
+function setProgress(){
+  stations.forEach((s,i)=>{
+    const d=document.getElementById('pd'+i);
+    d.classList.remove('active','done');
+    if(i<unlocked-1 || (i<unlocked && s.solved)) d.classList.add('done');
+    if(i===unlocked-1 && !s.solved) d.classList.add('active');
+  });
+}
+
+function addStation(i){
+  const s=stations[i];
+  const card=document.createElement('section');
+  card.className='folder';card.id='st'+i;
+  card.innerHTML=`<span class="tab">SLOŽKA ${s.num} · ${s.tab}</span>
+    <span class="solved-stamp" id="stamp${i}">VYŘEŠENO</span>
+    <div class="folder-body"></div>`;
+  const body=card.querySelector('.folder-body');
+
+  // title + story
+  body.insertAdjacentHTML('beforeend',`<h2>${s.title}</h2>`);
+  if(s.story){const st=document.createElement('div');st.className='story';
+    st.innerHTML=s.story.map(p=>`<p>${p}</p>`).join('');body.appendChild(st);}
+  if(s.note){body.insertAdjacentHTML('beforeend',`<div class="instruction">🔎 ${s.note}</div>`);}
+  if(s.img){body.insertAdjacentHTML('beforeend',`<div class="imgnote">🖼️ ${s.img}</div>`);}
+
+  // intro station: just a start button
+  if(s.kind==='intro'){
+    const b=document.createElement('button');b.className='btn';b.textContent='Začít vyšetřování →';
+    b.onclick=()=>{s.solved=true;unlockNext(i);b.disabled=true;b.textContent='✓ Spis otevřen';};
+    body.appendChild(b);
+    game.appendChild(card);setProgress();return;
+  }
+
+  if(s.instruction){body.insertAdjacentHTML('beforeend',`<div class="instruction">${s.instruction}</div>`);}
+
+  // matches (selects)
+  const selects=[];
+  if(s.matches){
+    const mwrap=document.createElement('div');
+    s.matches.forEach((m,mi)=>{
+      const row=document.createElement('div');row.className='match-row';
+      row.innerHTML=`<span class="match-verb">${m.verb}</span><span class="match-arrow">→</span>`;
+      const sel=document.createElement('select');
+      sel.innerHTML=`<option value="">— vyber vazbu —</option>`+
+        VAZBY.map(v=>`<option value="${v}">${v}</option>`).join('');
+      sel.dataset.answer=m.a;selects.push(sel);row.appendChild(sel);mwrap.appendChild(row);
+    });
+    body.appendChild(mwrap);
+  }
+
+  // fill lines
+  const inputs=[];
+  if(s.lines){
+    s.lines.forEach(line=>{
+      const p=document.createElement('p');p.className='line';
+      line.forEach(seg=>{
+        if(typeof seg==='string'){p.insertAdjacentHTML('beforeend',seg);}
+        else if(seg.lead){p.insertAdjacentHTML('beforeend',`<span class="lead">${seg.lead}</span>`);}
+        else if(seg.hint!==undefined){
+          const inp=document.createElement('input');
+          inp.className='gap';inp.type='text';inp.autocomplete='off';inp.spellcheck=false;
+          inp.setAttribute('aria-label','doplň vazbu pro '+seg.hint);
+          inp.dataset.answers=JSON.stringify(seg.a);
+          inputs.push(inp);p.appendChild(inp);
+          const chip=document.createElement('span');chip.className='chip '+(seg.c||'nom');
+          chip.innerHTML=`<span class="lbl">1.p.</span>${seg.hint}`;
+          p.appendChild(document.createTextNode(' '));p.appendChild(chip);
+        }
+      });
+      body.appendChild(p);
+    });
+  }
+
+  // check button + result
+  if(selects.length||inputs.length){
+    const btn=document.createElement('button');btn.className='btn';btn.textContent='Ověřit';
+    const res=document.createElement('div');res.className='result';
+    body.appendChild(btn);body.appendChild(res);
+    btn.onclick=()=>{
+      let allOk=true,wrongKeys=[];
+      selects.forEach(sel=>{
+        const good=sel.value===sel.dataset.answer;
+        sel.style.borderColor=good?'var(--ok)':'var(--bad)';
+        if(!good){allOk=false;}
+      });
+      inputs.forEach(inp=>{
+        const ans=JSON.parse(inp.dataset.answers).map(norm);
+        const good=ans.includes(norm(inp.value));
+        inp.classList.toggle('ok',good);inp.classList.toggle('bad',!good);
+        if(!good){allOk=false;wrongKeys.push(JSON.parse(inp.dataset.answers)[0]);}
+      });
+      res.className='result show '+(allOk?'win':'err');
+      if(allOk){
+        res.innerHTML='✓ Sedí. Vazby jsou správně — složka odemčena.';
+        s.solved=true;
+        document.getElementById('stamp'+i).classList.add('show');
+        btn.disabled=true;btn.style.opacity=.5;
+        selects.forEach(x=>x.disabled=true);inputs.forEach(x=>x.disabled=true);
+        afterSolve(i,body);
+      } else {
+        res.innerHTML='✕ Ještě ne — zkontrolujte předložky a koncovky u červených okének.';
+      }
+    };
+  } else {
+    // no fills (e.g. only followup) → afterSolve immediately after story
+    afterSolve(i,body,true);
+  }
+
+  game.appendChild(card);setProgress();
+}
+
+function afterSolve(i,body,skipStamp){
+  const s=stations[i];
+  if(s.followup){
+    const fu=document.createElement('div');fu.className='followup show';
+    fu.innerHTML=`<div class="q">${s.followup.q}</div><div class="choices"></div><div class="result" style="margin-top:12px"></div>`;
+    const ch=fu.querySelector('.choices');const r=fu.querySelector('.result');
+    s.followup.options.forEach((o,oi)=>{
+      const b=document.createElement('button');b.className='choice';b.textContent=o;
+      b.onclick=()=>{
+        if(oi===s.followup.correct){
+          b.classList.add('right');
+          [...ch.children].forEach(c=>c.disabled=true);
+          r.className='result show win';r.innerHTML='✓ '+s.followup.ok;
+          if(s.final){showFinal(s);} else {revealUnlock(i,body);unlockNext(i);}
+        } else {
+          b.classList.add('wrong');b.disabled=true;
+          r.className='result show err';r.innerHTML='✕ '+s.followup.no;
+        }
+      };
+      ch.appendChild(b);
+    });
+    body.appendChild(fu);
+    if(!skipStamp && !s.lines && !s.matches){/* stamp only after choice */}
+  } else {
+    revealUnlock(i,body);unlockNext(i);
+  }
+}
+
+function revealUnlock(i,body){
+  const s=stations[i];
+  if(s.unlock){
+    const u=document.createElement('div');u.className='unlock show';
+    u.innerHTML=`<span class="u-lbl">🔓 Odemčeno</span><p>${s.unlock}</p>`;
+    body.appendChild(u);
+  }
+}
+
+function unlockNext(i){
+  const s=stations[i];
+  setProgress();
+  if(s.last) return;
+  const body=document.querySelector('#st'+i+' .folder-body');
+  const nb=document.createElement('button');nb.className='btn ghost';
+  nb.textContent='Otevřít další složku →';nb.style.marginTop='16px';
+  nb.onclick=()=>{nb.remove();unlocked++;addStation(i+1);
+    document.getElementById('st'+(i+1)).scrollIntoView({behavior:'smooth',block:'start'});};
+  body.appendChild(nb);
+}
+
+function showFinal(s){
+  const f=document.createElement('div');f.className='final show';
+  f.innerHTML=`<span class="case-closed">Případ uzavřen</span>
+    <h2>${s.final.title}</h2>${s.final.text.map(p=>`<p>${p}</p>`).join('')}`;
+  game.appendChild(f);
+  stations.forEach((x,ix)=>{const d=document.getElementById('pd'+ix);if(d)d.classList.add('done');});
+  f.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// start
+unlocked=1;addStation(0);
+</script>
+</body>
+</html>
